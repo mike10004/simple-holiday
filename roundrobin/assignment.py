@@ -41,15 +41,14 @@ class Assigner(object):
         return given
 
 
-def list_persons(specs):
+def tokenize(specs):
+    assert isinstance(specs, tuple) or isinstance(specs, list), "expect list or tuple as argument"
     assert len(specs) > 0
+    orig = specs
     if len(specs) == 1:
-        n = int(specs)
-        names = []
-        for i in range(n):
-            names.append("ABCDEFGHIJKLMNOPQRSTUVWXYZ"[i])
-        return names
-    return specs
+        specs = [s.strip() for s in specs[0].split()]
+    _log.debug("tokenized %s to %s", orig, specs)
+    return tuple(specs)
 
 
 def render_assignments(assignments_by_giver, fmt, ofile=sys.stdout):
@@ -79,8 +78,9 @@ def main():
     args = p.parse_args()
     if args.seed is not None:
         random.seed(args.seed)
-    givers = list_persons(args.givers)
-    takers = list_persons(args.takers or givers)
+    givers = tokenize(args.givers)
+    takers = tokenize(args.takers or givers)
+    slots = tokenize(args.slots)
     _log.debug("givers %s; takers %s; slots %s", givers, takers, args.slots)
     all_assignments = Assigner().assign(givers, args.slots, takers)
     render_assignments(all_assignments, args.format)
