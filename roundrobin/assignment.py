@@ -75,7 +75,9 @@ def main():
     p.add_argument("--slots", nargs='+', default='', help="set gift types")
     p.add_argument("--seed", type=int, help="set random number generator seed")
     p.add_argument("--format", choices=('json', 'english'), default='json', help="output format")
+    p.add_argument("--log-level", choices=('DEBUG', 'INFO', 'WARN', 'ERROR'), default='INFO', help="set log level")
     args = p.parse_args()
+    logging.basicConfig(level=logging.__dict__[args.log_level])
     if args.seed is not None:
         random.seed(args.seed)
     givers = tokenize(args.givers)
