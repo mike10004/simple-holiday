@@ -1,6 +1,8 @@
 language: python
 python:
   - "3.6"
+install:
+  - true
 before_script:
   - python -m unittest discover --start-directory roundrobin/tests
 script:
