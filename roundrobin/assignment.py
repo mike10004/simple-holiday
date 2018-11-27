@@ -51,15 +51,15 @@ def tokenize(specs):
     return tuple(specs)
 
 
-def render_assignments(assignments_by_giver, fmt, ofile=sys.stdout):
+def render_assignments(givers, assignments_by_giver, fmt, ofile=sys.stdout):
     if fmt == 'json':
         pretty = {}
         for giver, assmts in assignments_by_giver.items():
             pretty[giver] = [{'to': a[_TAKER], 'kind': a[_SLOT]} for a in assmts]
             json.dump(pretty, ofile, indent=2)
     elif fmt == 'english':
-        for giver, assmts in assignments_by_giver.items():
-            for a in assmts:
+        for giver in givers:
+            for a in assignments_by_giver[giver]:
                 print("{} gives a \"{}\" gift to {}".format(giver, a[_SLOT], a[_TAKER]), file=ofile)
     else:
         _log.info("bad format %s", fmt)
@@ -85,7 +85,7 @@ def main():
     slots = tokenize(args.slots)
     _log.debug("givers %s; takers %s; slots %s", givers, takers, args.slots)
     all_assignments = Assigner().assign(givers, args.slots, takers)
-    render_assignments(all_assignments, args.format)
+    render_assignments(givers, all_assignments, args.format)
     return 0
 
 if __name__ == '__main__':
