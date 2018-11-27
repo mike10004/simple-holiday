@@ -4,6 +4,8 @@
 from __future__ import print_function
 import random
 import logging
+import sys
+import json
 from collections import defaultdict
 
 _SLOT = 0
@@ -22,7 +24,7 @@ class Assigner(object):
         takers = takers or set(givers)
         givers, takers = list(givers), list(takers)
         slots = list(slots)
-        given = defaultdict(list)  # map of giver -> SlotAssignment
+        given = defaultdict(list)  # map of giver -> (slot, taker) tuple
         random.shuffle(takers)
         for giver in givers:
             i0 = takers.index(giver)
@@ -39,27 +41,6 @@ class Assigner(object):
         return given
 
 
-def select(items, n):
-    items = list(items)
-    random.shuffle(items)
-    selected = []
-    while len(selected) < n:
-        selected.append(items[0])
-        del items[0]
-    return selected
-
-def do_assignments(givers, takers, slots):
-    all_assignments = Assigner().assign(givers, slots, takers)
-    print("givers: ", givers)
-    print("takers: ", takers)
-    print("slots: ", slots)
-    for giver, assignments in all_assignments.items():
-        print("  {}: ".format(giver), end="")
-        for ass in assignments:
-            print("{} ".format(str(ass)), end="")
-        print()
-
-
 def list_persons(specs):
     assert len(specs) > 0
     if len(specs) == 1:
@@ -71,16 +52,38 @@ def list_persons(specs):
     return specs
 
 
+def render_assignments(assignments_by_giver, fmt, ofile=sys.stdout):
+    if fmt == 'json':
+        pretty = {}
+        for giver, assmts in assignments_by_giver.items():
+            pretty[giver] = [{'to': a[_TAKER], 'kind': a[_SLOT]} for a in assmts]
+            json.dump(pretty, ofile, indent=2)
+    elif fmt == 'english':
+        for giver, assmts in assignments_by_giver.items():
+            for a in assmts:
+                print("{} gives a \"{}\" gift to {}".format(giver, a[_SLOT], a[_TAKER]), file=ofile)
+    else:
+        _log.info("bad format %s", fmt)
+        raise ValueError("format not allowed")
+
+
+
 def main():
     from argparse import ArgumentParser
     p = ArgumentParser()
-    p.add_argument("givers", nargs='+')
-    p.add_argument("--takers")
-    p.add_argument("--slots", nargs='+', default='')
+    p.add_argument("givers", nargs='+', help="list of givers")
+    p.add_argument("--takers", help="list of takers; givers are used by default")
+    p.add_argument("--slots", nargs='+', default='', help="set gift types")
+    p.add_argument("--seed", type=int, help="set random number generator seed")
+    p.add_argument("--format", choices=('json', 'english'), default='json', help="output format")
     args = p.parse_args()
+    if args.seed is not None:
+        random.seed(args.seed)
     givers = list_persons(args.givers)
     takers = list_persons(args.takers or givers)
-    do_assignments(givers, takers, args.slots)
+    _log.debug("givers %s; takers %s; slots %s", givers, takers, args.slots)
+    all_assignments = Assigner().assign(givers, args.slots, takers)
+    render_assignments(all_assignments, args.format)
     return 0
 
 if __name__ == '__main__':
