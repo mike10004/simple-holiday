@@ -1,0 +1,7 @@
+language: python
+  python:
+    - "3.6"
+  before_script:
+    - python -m unittest discover --start-directory roundrobin/tests
+  script:
+    - roundrobin/assignment.py --seed 12345 --slots ${HOLIDAY_SLOTS} --format=english -- ${HOLIDAY_GIVERS} 
