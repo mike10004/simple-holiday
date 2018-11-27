@@ -6,7 +6,7 @@ import logging
 import unittest
 import os
 from roundrobin.assignment import Assigner
-
+from roundrobin.assignment import _TAKER, _SLOT
 
 _log = logging.getLogger(__name__)
 _logging_configured = False
@@ -28,8 +28,8 @@ class TestAssigner(unittest.TestCase):
             self.assertEqual(1, len(assignments))
             assignment = assignments[0]
             _log.debug("%s is assigned %s", giver, assignment)
-            self.assertEqual('*', assignment.slot)
-            self.assertNotEqual(giver, assignment.taker)
+            self.assertEqual('*', assignment[_SLOT])
+            self.assertNotEqual(giver, assignment[_TAKER])
 
     def test_three_people(self):
         a = Assigner()
@@ -39,6 +39,6 @@ class TestAssigner(unittest.TestCase):
         self.assertEqual(len(givers), len(actual))
         for giver, assignments in actual.items():
             self.assertEqual(2, len(assignments))
-            self.assertEqual(set(slots), set([a.slot for a in assignments]))
-            self.assertEqual(set(givers) - set([giver]), set([a.taker for a in assignments]))
+            self.assertEqual(set(slots), set([a[_SLOT] for a in assignments]))
+            self.assertEqual(set(givers) - set([giver]), set([a[_TAKER] for a in assignments]))
 

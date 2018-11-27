@@ -3,18 +3,14 @@
 
 from __future__ import print_function
 import random
+import logging
 from collections import defaultdict
 
-class SlotAssignment(object):
+_SLOT = 0
+_TAKER = 1
 
-    def __init__(self, slot, taker):
-        self.slot = slot
-        assert slot is not None
-        self.taker = taker
-        assert taker is not None
-    
-    def __str__(self):
-        return "{}/{}".format(self.taker, self.slot)
+
+_log = logging.getLogger(__name__)
 
 
 class Assigner(object):
@@ -27,13 +23,19 @@ class Assigner(object):
         givers, takers = list(givers), list(takers)
         slots = list(slots)
         given = defaultdict(list)  # map of giver -> SlotAssignment
+        random.shuffle(takers)
         for giver in givers:
-            selected_takers = select(set(takers) - set([giver]), len(slots))
-            for i in range(len(selected_takers)):
-                taker = selected_takers[i]
-                slot = slots[i % len(slots)]
-                assignment = SlotAssignment(slot, taker)
-                given[giver].append(assignment)
+            i0 = takers.index(giver)
+            p_takers = []
+            indexes = [i % len(takers) for i in range(i0 + 1, i0 + 1 + len(slots))]
+            _log.debug("giver %s is index %s among takers %s; examining elements %s of takers", giver, i0, takers, indexes)
+            for i in indexes:
+                p_takers.append(takers[i])
+            _log.debug("p_takers %s for slots %s", p_takers, slots)
+            assert len(slots) == len(p_takers), "expect to have one assigned taker per slot, but we have {} takers for {} slots".format(len(p_takers), len(slots))
+            for i in range(len(p_takers)):
+                slot, taker = slots[i], p_takers[i]
+                given[giver].append((slot, taker))
         return given
 
 
