@@ -35,6 +35,10 @@ _FORMATS = (
 
 class Shuffler(object):
 
+    def __init__(self, seed=None):
+        if seed is not None:
+            random.seed(seed)
+
     def shuffle(self, seq):
         random.shuffle(seq)
 
@@ -48,8 +52,15 @@ class Assigner(object):
         takers = takers or set(givers)
         givers, takers = list(givers), list(takers)
         slots = list(slots)
+        try:
+            givers = sorted(givers)
+            takers = sorted(takers)
+            slots = sorted(slots)
+        except TypeError:
+            pass
         given = defaultdict(set)  # map of giver -> set of (slot, taker) tuples
         self.shuffler.shuffle(takers)
+        _log.debug("shuffled takers: %s", takers)
         for giver in givers:
             i0 = takers.index(giver)
             p_takers = []
@@ -208,13 +219,11 @@ def main():
     p.add_argument("--log-level", choices=('DEBUG', 'INFO', 'WARN', 'ERROR'), default='INFO', help="set log level")
     args = p.parse_args()
     logging.basicConfig(level=logging.__dict__[args.log_level])
-    if args.seed is not None:
-        random.seed(args.seed)
     givers = tokenize(args.givers)
     takers = tokenize(args.takers or givers)
     slots = tokenize(args.slots)
     _log.debug("givers %s; takers %s; slots %s", givers, takers, args.slots)
-    all_assignments = Assigner(Shuffler()).assign(givers, args.slots, takers)
+    all_assignments = Assigner(Shuffler(args.seed)).assign(givers, args.slots, takers)
     render_assignments(givers, all_assignments, args.format)
     return 0
 
