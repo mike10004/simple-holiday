@@ -6,6 +6,7 @@ import random
 import logging
 import sys
 import json
+import csv
 from collections import defaultdict
 
 _SLOT = 0
@@ -13,19 +14,42 @@ _TAKER = 1
 
 
 _log = logging.getLogger(__name__)
+FORMAT_JSON = 'json'
+FORMAT_ENGLISH = 'english'
+FORMAT_MD_TABLE_TAKERS = 'markdown_takers'
+FORMAT_MD_TABLE_SLOTS = 'markdown_slots'
+FORMAT_CSV_TAKERS = 'csv_takers'
+FORMAT_TSV_TAKERS = 'tsv_takers'
+FORMAT_CSV_SLOTS = 'csv_slots'
+FORMAT_TSV_SLOTS = 'tsv_slots'
+_FORMATS = (
+    FORMAT_ENGLISH, 
+    FORMAT_JSON, 
+    FORMAT_MD_TABLE_TAKERS,
+    FORMAT_MD_TABLE_SLOTS,
+    FORMAT_CSV_TAKERS,
+    FORMAT_TSV_TAKERS,
+    FORMAT_CSV_SLOTS,
+    FORMAT_TSV_SLOTS,
+)
+
+class Shuffler(object):
+
+    def shuffle(self, seq):
+        random.shuffle(seq)
 
 
 class Assigner(object):
 
-    def __init__(self):
-        pass
+    def __init__(self, shuffler):
+        self.shuffler = shuffler
 
     def assign(self, givers, slots, takers=None):
         takers = takers or set(givers)
         givers, takers = list(givers), list(takers)
         slots = list(slots)
-        given = defaultdict(list)  # map of giver -> (slot, taker) tuple
-        random.shuffle(takers)
+        given = defaultdict(set)  # map of giver -> set of (slot, taker) tuples
+        self.shuffler.shuffle(takers)
         for giver in givers:
             i0 = takers.index(giver)
             p_takers = []
@@ -37,7 +61,7 @@ class Assigner(object):
             assert len(slots) == len(p_takers), "expect to have one assigned taker per slot, but we have {} takers for {} slots".format(len(p_takers), len(slots))
             for i in range(len(p_takers)):
                 slot, taker = slots[i], p_takers[i]
-                given[giver].append((slot, taker))
+                given[giver].add((slot, taker))
         return given
 
 
@@ -72,41 +96,105 @@ class AssignmentOracle(object):
                         return a[i]
         absence_fn((other, assmts, idx, giver))
         return None
+    
+    def get_others(self, idx):
+        others = set()
+        for _, gasses in self.assignments.items():
+            for a in gasses:
+                others.add(a[idx])
+        others = list(others)
+        try:
+            others = sorted(others)
+        except TypeError:
+            pass
+        return others
 
 
-def repeat(ch, n):
+class Tabulator(object):
+
+    def __init__(self, other_idx):
+        self.other_idx = other_idx
+    
+    def to_rows(self, givers, assignments):
+        oracle = AssignmentOracle(assignments)
+        others = oracle.get_others(self.other_idx)
+        if set(others) == set(givers):
+            others = list(givers)
+        cells_per_row = 1 + len(others)
+        rows = []
+        header_row = tuple([""] + others)
+        rows.append(header_row)
+        for giver in givers:
+            asmts = [oracle.get_by_item(giver, other, self.other_idx) or '' for other in others]
+            row_data = tuple([giver] + asmts)
+            rows.append(row_data)
+        return rows
+
+
+def _repeat(ch, n):
     return ''.join([ch for i in range(n)])
 
 
+class MarkdownTableRenderer(object):
+
+    def __init__(self, spaceage):
+        self.spaceage = spaceage
+
+    def render(self, rows, ofile=sys.stdout):
+        cell_fmt = " %" + str(self.spaceage) + "s "
+        width = self.spaceage + 2
+        pipe = "|"
+        num_cells = len(rows[0])
+        divider = pipe + pipe.join([_repeat('-', width) for i in range(num_cells)]) + pipe
+        print(divider, file=ofile)
+        for row in rows:
+            row_formatted = pipe + pipe.join([cell_fmt % row[i] for i in range(len(row))]) + pipe
+            print(row_formatted, file=ofile)
+            print(divider, file=ofile)
+
+
+class CsvTableRenderer(object):
+
+    def __init__(self, delimiter):
+        self.delimiter = delimiter
+
+    def render(self, rows, ofile=sys.stdout):
+        csv_writer = csv.writer(ofile, delimiter=self.delimiter)
+        for row in rows:
+            csv_writer.writerow(row)
+
+
+_RENDERABLES = {
+    FORMAT_MD_TABLE_TAKERS: (_TAKER, MarkdownTableRenderer, 8),
+    FORMAT_MD_TABLE_SLOTS: (_SLOT, MarkdownTableRenderer, 8),
+    FORMAT_CSV_TAKERS: (_TAKER, CsvTableRenderer, ","),
+    FORMAT_TSV_SLOTS: (_SLOT, CsvTableRenderer, "\t"),
+    FORMAT_TSV_TAKERS: (_TAKER, CsvTableRenderer, "\t"),
+    FORMAT_CSV_SLOTS: (_SLOT, CsvTableRenderer,  ","),
+}
+
 def render_assignments(givers, assignments_by_giver, fmt, ofile=sys.stdout):
-    if fmt == 'json':
+    if fmt == FORMAT_JSON:
         pretty = {}
         for giver, assmts in assignments_by_giver.items():
             pretty[giver] = [{'to': a[_TAKER], 'kind': a[_SLOT]} for a in assmts]
             json.dump(pretty, ofile, indent=2)
-    elif fmt == 'english':
+    elif fmt == FORMAT_ENGLISH:
         for giver in givers:
             for a in assignments_by_giver[giver]:
                 print("{} gives a \"{}\" gift to {}".format(giver, a[_SLOT], a[_TAKER]), file=ofile)
-    elif fmt == 'table_takers':
-        # TODO assert that set(givers) == set(takers)
-        takers = givers
-        cells_per_row = 1 + len(givers)
-        divider = "|-" + "-|-".join([repeat('-', 8) for i in range(cells_per_row)]) + "-|"
-        row_fmt = "| " + " | ".join(["%8s" for i in range(cells_per_row)]) + " |"
-        header_row = row_fmt % tuple([""] + list(takers))
-        print(divider, file=ofile)
-        print(header_row, file=ofile)
-        print(divider, file=ofile)
-        oracle = AssignmentOracle(assignments_by_giver)
-        for giver in givers:
-            row_data = tuple([giver] + [oracle.get_slot(giver, taker) or "" for taker in takers])
-            print(row_fmt % row_data)
-            print(divider, file=ofile)
     else:
-        _log.info("bad format %s", fmt)
-        raise ValueError("format not allowed")
-
+        try:
+            rendering_hints = _RENDERABLES[fmt]
+        except KeyError:
+            _log.info("bad output format %s", fmt)
+            raise ValueError("output format invalid")
+        other_idx = rendering_hints[0]
+        rows = Tabulator(other_idx).to_rows(givers, assignments_by_giver)
+        renderer_cls = rendering_hints[1]
+        renderer_args = rendering_hints[2:]
+        renderer = renderer_cls(*renderer_args)
+        renderer.render(rows, ofile)
 
 
 def main():
@@ -116,7 +204,7 @@ def main():
     p.add_argument("--takers", help="list of takers; givers are used by default")
     p.add_argument("--slots", nargs='+', default='', help="set gift types")
     p.add_argument("--seed", type=int, help="set random number generator seed")
-    p.add_argument("--format", choices=('json', 'english', 'table_takers'), default='english', help="output format")
+    p.add_argument("--format", choices=_FORMATS, default=_FORMATS[0], help="output format")
     p.add_argument("--log-level", choices=('DEBUG', 'INFO', 'WARN', 'ERROR'), default='INFO', help="set log level")
     args = p.parse_args()
     logging.basicConfig(level=logging.__dict__[args.log_level])
@@ -126,9 +214,10 @@ def main():
     takers = tokenize(args.takers or givers)
     slots = tokenize(args.slots)
     _log.debug("givers %s; takers %s; slots %s", givers, takers, args.slots)
-    all_assignments = Assigner().assign(givers, args.slots, takers)
+    all_assignments = Assigner(Shuffler()).assign(givers, args.slots, takers)
     render_assignments(givers, all_assignments, args.format)
     return 0
+
 
 if __name__ == '__main__':
     exit(main())
