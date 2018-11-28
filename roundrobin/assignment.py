@@ -74,6 +74,9 @@ class AssignmentOracle(object):
         return None
 
 
+def repeat(ch, n):
+    return ''.join([ch for i in range(n)])
+
 
 def render_assignments(givers, assignments_by_giver, fmt, ofile=sys.stdout):
     if fmt == 'json':
@@ -89,7 +92,7 @@ def render_assignments(givers, assignments_by_giver, fmt, ofile=sys.stdout):
         # TODO assert that set(givers) == set(takers)
         takers = givers
         cells_per_row = 1 + len(givers)
-        divider = ''.join(['-' for i in range((8 + 3) * cells_per_row + 1)])
+        divider = "|-" + "-|-".join([repeat('-', 8) for i in range(cells_per_row)]) + "-|"
         row_fmt = "| " + " | ".join(["%8s" for i in range(cells_per_row)]) + " |"
         header_row = row_fmt % tuple([""] + list(takers))
         print(divider, file=ofile)
