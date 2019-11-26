@@ -2,8 +2,8 @@ language: python
 python:
   - "3.6"
 install:
-  - true
+  - "true"
 before_script:
   - python -m unittest discover --start-directory roundrobin/tests
 script:
-  - roundrobin/assignment.py --seed ${HOLIDAY_SEED} --slots ${HOLIDAY_SLOTS} --format=${HOLIDAY_FORMAT} --log-level=${HOLIDAY_LOG_LEVEL} -- ${HOLIDAY_GIVERS} 
+  - roundrobin/assignment.py --seed ${HOLIDAY_SEED} --algorithm ${HOLIDAY_ALGORITHM} --slots ${HOLIDAY_SLOTS} --format=${HOLIDAY_FORMAT} --log-level=${HOLIDAY_LOG_LEVEL} -- ${HOLIDAY_GIVERS}
