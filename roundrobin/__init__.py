@@ -1,7 +1,7 @@
 
 
 import random
-from typing import Sequence, Dict, Tuple, Any, List
+from typing import Sequence, Dict, Tuple, Any, List, FrozenSet
 import itertools
 
 
@@ -26,22 +26,6 @@ class Shuffler(object):
         assert len(first_k) == k
         return first_k
 
-    # @classmethod
-    # def _equals_with_offset(cls, p, q, q_offset):
-    #     for i in range(len(p)):
-    #         if p[i] != q[(i + q_offset) % len(q)]:
-    #             return False
-    #     return True
-    #
-    # @classmethod
-    # def same_order(cls, p, q):
-    #     assert len(p) == len(q)
-    #     n = len(p)
-    #     for q_offset in range(n):
-    #         if not Shuffler._equals_with_offset(p, q, q_offset):
-    #             return False
-    #     return True
-
     @classmethod
     def get_order_changing_permutations(cls, seq):
         seq = list(seq)
@@ -55,7 +39,10 @@ class Shuffler(object):
         all_perms_2 = Shuffler.get_order_changing_permutations(seq2)
         index_pairs_list = list(itertools.product(list(range(len(all_perms_1))), list(range(len(all_perms_2)))))
         index_pairs_list_len = len(index_pairs_list)
-        index = self.rng.randint(0, index_pairs_list_len - 1) if self.seed is None else (self.seed % index_pairs_list_len)
+        if self.seed is None:
+            index = self.rng.randint(0, index_pairs_list_len - 1)
+        else:
+            index = self.seed % index_pairs_list_len
         index1, index2 = index_pairs_list[index]
         seq1_perm = all_perms_1[index1]
         seq2_perm = all_perms_2[index2]
@@ -71,3 +58,11 @@ class Assigner(object):
 
     def assign(self, givers, slots, takers=None) -> Dict[Any, List[Tuple[Any, Any]]]:
         raise NotImplementedError("subclasses must implement")
+
+    @staticmethod
+    def freeze(assignments: Dict[Any, List[Tuple[Any, Any]]]) -> FrozenSet[Tuple[Any, Any, Any]]:
+        unfrozen = set()
+        for g, gifts in assignments.items():
+            for slot, taker in gifts:
+                unfrozen.add((g, slot, taker))
+        return frozenset(unfrozen)

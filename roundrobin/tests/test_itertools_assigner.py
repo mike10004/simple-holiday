@@ -32,6 +32,17 @@ class ItertoolsAssignerTest(roundrobin.tests.AssignerCaseBase):
         }
         super().test_three_givers_two_slots(expected)
 
+    def test_repeatable(self):
+        accumulated = set()
+        first_accumulated = None
+        for trial in range(100):
+            result = self._do_three_givers_two_slots()
+            result = roundrobin.Assigner.freeze(result)
+            if first_accumulated is None:
+                first_accumulated = result
+            accumulated.add(result)
+        self.assertSetEqual({first_accumulated}, accumulated)
+
     def check_result(self, result, slots, seed, counts=None):
         pre_frozen = set()
         for giver, gifts in result.items():
@@ -46,15 +57,15 @@ class ItertoolsAssignerTest(roundrobin.tests.AssignerCaseBase):
             self.assertNotIn(giver, given_to, "expect giver does not self-gift")
             self.assertEqual(len(given_to), len(set(given_to)), "expect no duplicate recipients")
             pre_frozen.add((giver, frozenset(gifts)))
-        frozen = frozenset(pre_frozen)
+        frozen = roundrobin.Assigner.freeze(result)
         if counts is not None:
             counts[frozen].append(seed)
 
     def test_many_seeds(self, num_seeds=None):
         n = 0
         counts = defaultdict(list)
-        slots = {1, 2, 3}
-        givers = {'a', 'b', 'c', 'd', 'e', 'f'}
+        slots = [1, 2, 3]
+        givers = list("abcdef")
         if num_seeds is None:
             num_takers_permutations = len(roundrobin.Shuffler.get_order_changing_permutations(givers))
             num_slots_permutations = len(roundrobin.Shuffler.get_order_changing_permutations(slots))

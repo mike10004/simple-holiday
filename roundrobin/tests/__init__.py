@@ -27,7 +27,7 @@ class BetterEncoder(json.JSONEncoder):
 class NonrandomShuffler(Shuffler):
 
     def __init__(self):
-        super().__init__()
+        super().__init__(0)
 
     def shuffle(self, seq):
         pass
@@ -57,11 +57,14 @@ class AssignerCaseBase(unittest.TestCase):
         }
         self.assertDictEqual(expected, actual, "two people, one slot")
 
-    def test_three_givers_two_slots(self, expected=None):
+    def _do_three_givers_two_slots(self):
         a = self._create_assigner()
         givers = ('a', 'b', 'c')
         slots = ('*', '$')
-        actual = a.assign(givers, slots)
+        return a.assign(givers, slots)
+
+    def test_three_givers_two_slots(self, expected=None):
+        actual = self._do_three_givers_two_slots()
         expected = expected or {
             'a': {('*', 'c'), ('$', 'b')},
             'b': {('*', 'a'), ('$', 'c')},
