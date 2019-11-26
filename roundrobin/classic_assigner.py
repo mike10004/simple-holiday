@@ -3,9 +3,8 @@
 
 import logging
 from collections import defaultdict
-from typing import Dict, Tuple, Any, Sequence
+from typing import Dict, Tuple, Any, Set
 from roundrobin import Assigner, Shuffler
-import random
 
 _log = logging.getLogger(__name__)
 
@@ -14,7 +13,7 @@ class ClassicAssigner(Assigner):
     def __init__(self, shuffler: Shuffler):
         super().__init__(shuffler)
 
-    def assign(self, givers, slots, takers=None) -> Dict[Any, Tuple[Any, Any]]:
+    def assign(self, givers, slots, takers=None) -> Dict[Any, Set[Tuple[Any, Any]]]:
         takers = takers or set(givers)
         givers, takers = list(givers), list(takers)
         slots = list(slots)
