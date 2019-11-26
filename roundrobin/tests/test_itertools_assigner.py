@@ -21,3 +21,11 @@ class ItertoolsAssignerTest(roundrobin.tests.AssignerCaseBase):
         self.maxDiff = None
         self.shuffler = NonrandomShuffler()
 
+    def test_three_givers_two_slots(self, expected=None):
+        expected = expected or {
+            'a': {('*', 'c'), ('$', 'b')},
+            'b': {('$', 'a'), ('*', 'c')},
+            'c': {('*', 'b'), ('$', 'a')},
+        }
+        super().test_three_givers_two_slots(expected)
+

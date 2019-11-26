@@ -42,7 +42,7 @@ class AssignerCaseBase(unittest.TestCase):
         a = self._create_assigner()
         a.allow_self_assignment = True
         givers = ('a',)
-        actual = a.assign(givers, ('*',), givers)
+        actual = a.assign(givers, ('*',))
         expected = {
             'a': {('*', 'a')}
         }
@@ -57,12 +57,12 @@ class AssignerCaseBase(unittest.TestCase):
         }
         self.assertDictEqual(expected, actual, "two people, one slot")
 
-    def test_three_givers_two_slots(self):
+    def test_three_givers_two_slots(self, expected=None):
         a = self._create_assigner()
         givers = ('a', 'b', 'c')
         slots = ('*', '$')
         actual = a.assign(givers, slots)
-        expected = {
+        expected = expected or {
             'a': {('*', 'c'), ('$', 'b')},
             'b': {('*', 'a'), ('$', 'c')},
             'c': {('*', 'b'), ('$', 'a')},

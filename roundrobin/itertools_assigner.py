@@ -20,8 +20,9 @@ class ItertoolsAssigner(Assigner):
         assert len(givers) == len(set(givers))
         assert len(slots) == len(set(slots))
         assert takers is None or (len(takers) == len(set(takers)))
-        slots = list(slots)
-        takers = takers or set(givers)
+        givers = sorted(givers)
+        slots = sorted(list(slots))
+        takers = sorted(takers or set(givers))
         assignments = defaultdict(set)
         for g in givers:
             recipient_pool = self.get_takers(takers, givers, g)
