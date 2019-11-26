@@ -16,7 +16,7 @@ class Shuffler(object):
     def sample(self, seq: Sequence, k: int) -> List:
         """Return a random sample of k elements from a sequence."""
         list_copy = list(seq)
-        assert k <= len(list_copy), f"sequence must contain at least k={k} elements"
+        assert k <= len(list_copy), "sequence must contain at least k={} elements".format(k)
         self.shuffle(list_copy)
         first_k = list_copy[:k]
         assert len(first_k) == k

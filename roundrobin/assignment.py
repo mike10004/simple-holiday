@@ -173,7 +173,7 @@ def main():
     p.add_argument("--takers", help="list of takers; givers are used by default")
     p.add_argument("--slots", nargs='+', default='', help="set gift types")
     p.add_argument("--seed", type=int, help="set random number generator seed")
-    p.add_argument("--format", metavar='FORMAT', choices=_FORMATS, default=_FORMATS[0], help=f"output format (choices: {set(_FORMATS)})")
+    p.add_argument("--format", metavar='FORMAT', choices=_FORMATS, default=_FORMATS[0], help="output format (choices: {})".format(set(_FORMATS)))
     p.add_argument("--log-level", metavar='LEVEL', choices=('DEBUG', 'INFO', 'WARN', 'ERROR'), default='INFO', help="set log level")
     p.add_argument("--algorithm", metavar='ALGO', choices=('classic', 'nuevo'), default='classic', help="assignment algorithm to use; choices are 'nuevo' or 'classic'")
     args = p.parse_args()
