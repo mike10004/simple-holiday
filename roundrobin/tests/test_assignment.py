@@ -4,21 +4,14 @@
 from __future__ import print_function
 import logging
 import unittest
-import os
 import io
-import random
 import json
-from roundrobin.assignment import Assigner, Tabulator, CsvTableRenderer, MarkdownTableRenderer, AssignmentOracle, Shuffler
+from roundrobin.assignment import Tabulator, CsvTableRenderer, MarkdownTableRenderer, AssignmentOracle
 from roundrobin.assignment import _TAKER, _SLOT, _FORMATS
 from roundrobin.assignment import tokenize, render_assignments
+import roundrobin.tests
 
 _log = logging.getLogger(__name__)
-_logging_configured = False
-
-if not _logging_configured:
-    level = logging.__dict__[os.getenv('SIMPLE_HOLIDAY_TESTS_LOG_LEVEL', 'INFO')]
-    logging.basicConfig(level=level)
-    _logging_configured = True
 
 
 class BetterEncoder(json.JSONEncoder):
@@ -27,53 +20,6 @@ class BetterEncoder(json.JSONEncoder):
         if isinstance(obj, set):
            return list(obj)
         return json.JSONEncoder.default(self, obj)
-
-
-class NonrandomShuffler(Shuffler):
-
-    def __init__(self):
-        pass
-    
-    def shuffle(self, seq):
-        pass
-
-class TestAssigner(unittest.TestCase):
-
-    def setUp(self):
-        self.maxDiff = None
-        self.shuffler = NonrandomShuffler()
-
-    def test_one_person(self):
-        a = Assigner(self.shuffler)
-        actual = a.assign(('a'), ('*'))
-        expected = {
-            'a': set([('*', 'a')])
-        }
-        self.assertDictEqual(expected, actual, "base case (one person, one slot)")
-
-    def test_two_people(self):
-        a = Assigner(self.shuffler)
-        actual = a.assign(('A', 'B'), ('*'))
-        expected = {
-            'A': set([('*', 'B')]),
-            'B': set([('*', 'A')]),
-        }
-        self.assertDictEqual(expected, actual, "two people, one slot")
-
-    def test_three_givers_two_slots(self):
-        a = Assigner(self.shuffler)
-        givers = ('a', 'b', 'c')
-        slots = ('*', '$')
-        actual = a.assign(givers, slots)
-        expected = {
-            'a': set([('*', 'c'), ('$', 'b')]),
-            'b': set([('*', 'a'), ('$', 'c')]),
-            'c': set([('*', 'b'), ('$', 'a')]),
-        }
-        if expected != actual:
-            print("expected: \n\n{}\n\n".format(json.dumps(expected, cls=BetterEncoder)))
-            print("  actual: \n\n{}\n\n".format(json.dumps(actual, cls=BetterEncoder)))
-        self.assertDictEqual(expected, actual, "three givers, two slots")
 
 
 class TestRenderFunction(unittest.TestCase):

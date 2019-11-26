@@ -2,16 +2,14 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
-import random
 import logging
 import sys
 import json
 import csv
-from collections import defaultdict
+from roundrobin import classic_assigner
 
 _SLOT = 0
 _TAKER = 1
-
 
 _log = logging.getLogger(__name__)
 FORMAT_JSON = 'json'
@@ -32,49 +30,6 @@ _FORMATS = (
     FORMAT_CSV_SLOTS,
     FORMAT_TSV_SLOTS,
 )
-
-class Shuffler(object):
-
-    def __init__(self, seed=None):
-        if seed is not None:
-            random.seed(seed)
-
-    def shuffle(self, seq):
-        random.shuffle(seq)
-
-
-class Assigner(object):
-
-    def __init__(self, shuffler):
-        self.shuffler = shuffler
-
-    def assign(self, givers, slots, takers=None):
-        takers = takers or set(givers)
-        givers, takers = list(givers), list(takers)
-        slots = list(slots)
-        try:
-            givers = sorted(givers)
-            takers = sorted(takers)
-            slots = sorted(slots)
-        except TypeError:
-            pass
-        given = defaultdict(set)  # map of giver -> set of (slot, taker) tuples
-        self.shuffler.shuffle(takers)
-        _log.debug("shuffled takers: %s", takers)
-        for giver in givers:
-            i0 = takers.index(giver)
-            p_takers = []
-            indexes = [i % len(takers) for i in range(i0 + 1, i0 + 1 + len(slots))]
-            _log.debug("giver %s is index %s among takers %s; examining elements %s of takers", giver, i0, takers, indexes)
-            for i in indexes:
-                p_takers.append(takers[i])
-            _log.debug("p_takers %s for slots %s", p_takers, slots)
-            assert len(slots) == len(p_takers), "expect to have one assigned taker per slot, but we have {} takers for {} slots".format(len(p_takers), len(slots))
-            for i in range(len(p_takers)):
-                slot, taker = slots[i], p_takers[i]
-                given[giver].add((slot, taker))
-        return given
-
 
 def tokenize(specs):
     assert isinstance(specs, tuple) or isinstance(specs, list), "expect list or tuple as argument"
@@ -217,13 +172,20 @@ def main():
     p.add_argument("--seed", type=int, help="set random number generator seed")
     p.add_argument("--format", choices=_FORMATS, default=_FORMATS[0], help="output format")
     p.add_argument("--log-level", choices=('DEBUG', 'INFO', 'WARN', 'ERROR'), default='INFO', help="set log level")
+    p.add_argument("--algorithm", choices=('classic', 'nuevo'), default='classic')
     args = p.parse_args()
     logging.basicConfig(level=logging.__dict__[args.log_level])
     givers = tokenize(args.givers)
     takers = tokenize(args.takers or givers)
     slots = tokenize(args.slots)
     _log.debug("givers %s; takers %s; slots %s", givers, takers, args.slots)
-    all_assignments = Assigner(Shuffler(args.seed)).assign(givers, args.slots, takers)
+    if args.algorithm == 'nuevo':
+        raise NotImplementedError("not yet implemented")
+    elif args.algorithm == 'classic':
+        assigner = classic_assigner.Assigner(classic_assigner.Shuffler(args.seed))
+    else:
+        raise ValueError("algorithm not recognized: " + args.algorithm)
+    all_assignments = assigner.assign(givers, args.slots, takers)
     render_assignments(givers, all_assignments, args.format)
     return 0
 
