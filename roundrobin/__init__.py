@@ -27,6 +27,16 @@ class Assigner(object):
 
     def __init__(self, shuffler: Shuffler):
         self.shuffler = shuffler
+        self.allow_self_assignment = False
 
     def assign(self, givers, slots, takers=None) -> Dict[Any, List[Tuple[Any, Any]]]:
         raise NotImplementedError("subclasses must implement")
+
+    def get_takers(self, takers, givers, giver):
+        recipient_pool_ = set(givers) if takers is None else set(takers)
+        if not self.allow_self_assignment:
+            try:
+                recipient_pool_.remove(giver)
+            except KeyError:
+                pass
+        return sorted(recipient_pool_)

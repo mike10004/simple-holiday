@@ -40,7 +40,9 @@ class AssignerCaseBase(unittest.TestCase):
 
     def test_one_person(self):
         a = self._create_assigner()
-        actual = a.assign(('a',), ('*',))
+        a.allow_self_assignment = True
+        givers = ('a',)
+        actual = a.assign(givers, ('*',), givers)
         expected = {
             'a': {('*', 'a')}
         }

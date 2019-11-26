@@ -15,8 +15,9 @@ _log = logging.getLogger(__name__)
 class ItertoolsAssignerTest(roundrobin.tests.AssignerCaseBase):
 
     def _create_assigner(self):
-        return ItertoolsAssigner()
+        return ItertoolsAssigner(self.shuffler)
 
     def setUp(self):
         self.maxDiff = None
+        self.shuffler = NonrandomShuffler()
 
