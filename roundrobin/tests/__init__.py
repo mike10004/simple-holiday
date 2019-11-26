@@ -5,7 +5,7 @@ import os
 import json
 import logging
 import unittest
-
+from roundrobin import Shuffler, Assigner
 
 _logging_configured = False
 
@@ -24,9 +24,18 @@ class BetterEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
-class AssignerTestBase(unittest.TestCase):
+class NonrandomShuffler(Shuffler):
 
-    def _create_assigner(self):
+    def __init__(self):
+        super().__init__()
+
+    def shuffle(self, seq):
+        pass
+
+
+class AssignerCaseBase(unittest.TestCase):
+
+    def _create_assigner(self) -> Assigner:
         raise NotImplementedError("subclasses must implement this method")
 
     def test_one_person(self):

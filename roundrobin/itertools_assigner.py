@@ -14,4 +14,9 @@ _log = logging.getLogger(__name__)
 class ItertoolsAssigner(object):
 
     def assign(self, givers, slots, takers=None) -> Dict[Any, Tuple[Any, Any]]:
-        raise NotImplementedError("not yet implemented")
+        assert len(givers) == len(set(givers))
+        assert len(slots) == len(set(slots))
+        takers = takers or set(givers)
+        for g in givers:
+            recipient_pool = list(filter(lambda t: t != g, takers))
+        raise NotImplementedError()

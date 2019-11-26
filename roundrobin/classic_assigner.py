@@ -4,24 +4,15 @@
 import logging
 from collections import defaultdict
 from typing import Dict, Tuple, Any, Sequence
+from roundrobin import Assigner, Shuffler
 import random
 
 _log = logging.getLogger(__name__)
 
-class Shuffler(object):
-
-    def __init__(self, seed: int=None):
-        if seed is not None:
-            self.rng = random.Random(seed)
-
-    def shuffle(self, seq: Sequence):
-        self.rng.shuffle(seq)
-
-
-class Assigner(object):
+class ClassicAssigner(Assigner):
 
     def __init__(self, shuffler: Shuffler):
-        self.shuffler = shuffler
+        super().__init__(shuffler)
 
     def assign(self, givers, slots, takers=None) -> Dict[Any, Tuple[Any, Any]]:
         takers = takers or set(givers)
