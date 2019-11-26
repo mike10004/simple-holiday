@@ -10,3 +10,9 @@ environment with the following variables:
 
 Markdown-format tables can be rendered at 
 https://www.tablesgenerator.com/markdown_tables
+
+When executing from the command line, you may have to do
+
+    $ export PYTHONPATH=$(pwd)
+
+first.

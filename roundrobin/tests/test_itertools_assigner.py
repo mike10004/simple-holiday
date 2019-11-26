@@ -56,7 +56,9 @@ class ItertoolsAssignerTest(roundrobin.tests.AssignerCaseBase):
         slots = {1, 2, 3}
         givers = {'a', 'b', 'c', 'd', 'e', 'f'}
         if num_seeds is None:
-            num_seeds = roundrobin.Shuffler().count_permutations(len(givers)) #// 2
+            num_takers_permutations = len(roundrobin.Shuffler.get_order_changing_permutations(givers))
+            num_slots_permutations = len(roundrobin.Shuffler.get_order_changing_permutations(slots))
+            num_seeds = num_takers_permutations * num_slots_permutations
         for seed in range(num_seeds):
             shuffler = roundrobin.Shuffler(seed)
             a = ItertoolsAssigner(shuffler)

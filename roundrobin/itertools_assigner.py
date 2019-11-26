@@ -3,12 +3,25 @@
 
 import logging
 from collections import defaultdict
-from typing import Dict, Tuple, Any, Set, List
+from typing import Dict, Tuple, Any, Set, List, Sequence
 import random
 import itertools
 from roundrobin import Assigner, Shuffler
 
 _log = logging.getLogger(__name__)
+
+
+class Circle(object):
+
+    def __init__(self, items: List):
+        self.iterator = itertools.cycle(items)
+
+    def next(self, prohibited=None):
+        value = self.iterator.__next__()
+        if prohibited is not None and value == prohibited:
+            # if items list has length == 1, then this will be the same value, but that's your fault
+            value = self.iterator.__next__()
+        return value
 
 
 class ItertoolsAssigner(Assigner):
@@ -30,14 +43,16 @@ class ItertoolsAssigner(Assigner):
         slots = sorted(list(slots))
         takers = sorted(takers or set(givers))
         assignments = defaultdict(dict)
-        takers = self.shuffler.permute(takers)
-        circular_takers = itertools.cycle(takers)
+        takers, slots = self.shuffler.permute_two(takers, slots)
+        takers_circle = Circle(takers)
         for g in givers:
+            if self.allow_self_assignment:
+                prohibited = None
+            else:
+                prohibited = g
+                assert len(takers) > 1, "must allow self-assignment if list of recipients has length 1"
             for slot in slots:
-                recipient = circular_takers.__next__()
-                if recipient == g and not self.allow_self_assignment:
-                    assert len(givers) > 1
-                    recipient = circular_takers.__next__()
+                recipient = takers_circle.next(prohibited)
                 assignments[g][slot] = recipient
         assignments_dict = {}
         for g, gifts in assignments.items():
