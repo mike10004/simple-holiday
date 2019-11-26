@@ -6,7 +6,9 @@ import logging
 import sys
 import json
 import csv
+from roundrobin import Shuffler
 from roundrobin import classic_assigner
+from roundrobin import itertools_assigner
 
 _SLOT = 0
 _TAKER = 1
@@ -178,14 +180,15 @@ def main():
     givers = tokenize(args.givers)
     takers = tokenize(args.takers or givers)
     slots = tokenize(args.slots)
-    _log.debug("givers %s; takers %s; slots %s", givers, takers, args.slots)
+    _log.debug("givers %s; takers %s; slots %s", givers, takers, slots)
+    shuffler = Shuffler(args.seed)
     if args.algorithm == 'nuevo':
-        raise NotImplementedError("not yet implemented")
+        assigner = itertools_assigner.ItertoolsAssigner(shuffler)
     elif args.algorithm == 'classic':
-        assigner = classic_assigner.Assigner(classic_assigner.Shuffler(args.seed))
+        assigner = classic_assigner.ClassicAssigner(shuffler)
     else:
         raise ValueError("algorithm not recognized: " + args.algorithm)
-    all_assignments = assigner.assign(givers, args.slots, takers)
+    all_assignments = assigner.assign(givers, slots, takers)
     render_assignments(givers, all_assignments, args.format)
     return 0
 
