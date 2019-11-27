@@ -6,8 +6,7 @@ import logging
 import sys
 import json
 import csv
-import os
-from roundrobin import Shuffler
+from roundrobin import Shuffler, Assignment
 from roundrobin import classic_assigner
 from roundrobin import itertools_assigner
 
@@ -142,7 +141,8 @@ _RENDERABLES = {
     FORMAT_CSV_SLOTS: (_SLOT, CsvTableRenderer,  ","),
 }
 
-def render_assignments(givers, assignments_by_giver, fmt, ofile=sys.stdout):
+def render_assignments(givers, assignment: Assignment, fmt, ofile=sys.stdout):
+    assignments_by_giver = assignment.to_dict_by_giver()
     if fmt == FORMAT_JSON:
         pretty = {}
         for giver, assmts in assignments_by_giver.items():

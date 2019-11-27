@@ -1,9 +1,28 @@
 
 
 import random
-from typing import Sequence, Dict, Tuple, Any, List, FrozenSet
+from typing import Sequence, Dict, Tuple, Any, List
 import itertools
+from collections import  defaultdict
 
+class Assignment(frozenset):
+
+    def __new__(cls, assignment_dict: Dict[Any, Sequence[Tuple[Any, Any]]]):
+        triplets = set()
+        for g, gifts in assignment_dict.items():
+            for slot, taker in gifts:
+                triplets.add((g, slot, taker))
+        return super(Assignment, cls).__new__(cls, triplets)
+
+    def to_dict_by_giver(self) -> Dict[Any, List[Tuple[Any, Any]]]:
+        d = defaultdict(list)
+        for giver, slot, taker in self:
+            d[giver].append((slot, taker))
+        return d
+
+    @classmethod
+    def from_set(cls, triplets):
+        return super(Assignment, cls).__new__(cls, triplets)
 
 class Shuffler(object):
 
@@ -56,13 +75,6 @@ class Assigner(object):
         self.shuffler = shuffler
         self.allow_self_assignment = False
 
-    def assign(self, givers, slots, takers=None) -> Dict[Any, List[Tuple[Any, Any]]]:
+    def assign(self, givers, slots, takers=None) -> Assignment:
         raise NotImplementedError("subclasses must implement")
 
-    @staticmethod
-    def freeze(assignments: Dict[Any, List[Tuple[Any, Any]]]) -> FrozenSet[Tuple[Any, Any, Any]]:
-        unfrozen = set()
-        for g, gifts in assignments.items():
-            for slot, taker in gifts:
-                unfrozen.add((g, slot, taker))
-        return frozenset(unfrozen)

@@ -6,6 +6,7 @@ import logging
 import unittest
 import io
 import json
+from roundrobin import Assignment
 from roundrobin.assignment import Tabulator, CsvTableRenderer, MarkdownTableRenderer, AssignmentOracle
 from roundrobin.assignment import _TAKER, _SLOT, _FORMATS
 from roundrobin.assignment import tokenize, render_assignments
@@ -25,12 +26,12 @@ class BetterEncoder(json.JSONEncoder):
 class TestRenderFunction(unittest.TestCase):
 
     def test_render_assignments(self):
-        sample = {
-            'a': [('*', 'b'), ('$', 'c')],
-            'b': [('*', 'c'), ('$', 'a')],
-            'c': [('*', 'a'), ('$', 'b')],
-        }
-        givers = list(sample.keys())
+        sample = Assignment.from_set({
+            ('a', '*', 'b'), ('a', '$', 'c'),
+            ('b', '*', 'c'), ('b', '$', 'a'),
+            ('c', '*', 'a'), ('c', '$', 'b'),
+        })
+        givers = list(set([x[0] for x in sample]))
         for fmt in _FORMATS:
             ofile = io.StringIO()
             render_assignments(givers, sample, fmt, ofile)

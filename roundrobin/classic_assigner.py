@@ -4,7 +4,7 @@
 import logging
 from collections import defaultdict
 from typing import Dict, Tuple, Any, Set
-from roundrobin import Assigner, Shuffler
+from roundrobin import Assigner, Assignment, Shuffler
 
 _log = logging.getLogger(__name__)
 
@@ -38,6 +38,6 @@ class ClassicAssigner(Assigner):
             for i in range(len(p_takers)):
                 slot, taker = slots[i], p_takers[i]
                 given[giver].add((slot, taker))
-        return dict(given.items())
+        return Assignment(given)
 
 

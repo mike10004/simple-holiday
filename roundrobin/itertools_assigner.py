@@ -6,7 +6,7 @@ from collections import defaultdict
 from typing import Dict, Tuple, Any, Set, List, Sequence
 import random
 import itertools
-from roundrobin import Assigner, Shuffler
+from roundrobin import Assigner, Assignment, Shuffler
 
 _log = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class ItertoolsAssigner(Assigner):
         available = filter(is_available, takers_slots.keys())
         return sorted(available)
 
-    def assign(self, givers, slots, takers=None) -> Dict[Any, Set[Tuple[Any, Any]]]:
+    def assign(self, givers, slots, takers=None) -> Assignment:
         assert len(givers) == len(set(givers))
         assert len(slots) == len(set(slots))
         assert takers is None or (len(takers) == len(set(takers)))
@@ -56,5 +56,5 @@ class ItertoolsAssigner(Assigner):
                 assignments[g][slot] = recipient
         assignments_dict = {}
         for g, gifts in assignments.items():
-            assignments_dict[g] = set([(slot, gifts[slot]) for slot in gifts])
-        return assignments_dict
+            assignments_dict[g] = [(slot, gifts[slot]) for slot in gifts]
+        return Assignment(assignments_dict)

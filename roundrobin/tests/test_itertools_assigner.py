@@ -10,7 +10,7 @@ from roundrobin.tests import NonrandomShuffler
 import roundrobin.tests
 import roundrobin
 from collections import defaultdict
-
+from roundrobin import Assignment
 
 _log = logging.getLogger(__name__)
 
@@ -24,11 +24,14 @@ class ItertoolsAssignerTest(roundrobin.tests.AssignerCaseBase):
         self.maxDiff = None
         self.shuffler = NonrandomShuffler()
 
-    def test_three_givers_two_slots(self, expected=None):
+    def test_three_givers_two_slots(self, expected: set=None):
         expected = expected or {
-            'a': {('*', 'c'), ('$', 'b')},
-            'b': {('$', 'a'), ('*', 'c')},
-            'c': {('*', 'b'), ('$', 'a')},
+            ('a', '*', 'c'),
+            ('a', '$', 'b'),
+            ('b', '$', 'a'),
+            ('b', '*', 'c'),
+            ('c', '*', 'b'),
+            ('c', '$', 'a'),
         }
         super().test_three_givers_two_slots(expected)
 
@@ -37,29 +40,17 @@ class ItertoolsAssignerTest(roundrobin.tests.AssignerCaseBase):
         first_accumulated = None
         for trial in range(100):
             result = self._do_three_givers_two_slots()
-            result = roundrobin.Assigner.freeze(result)
             if first_accumulated is None:
                 first_accumulated = result
             accumulated.add(result)
         self.assertSetEqual({first_accumulated}, accumulated)
 
-    def check_result(self, result, slots, seed, counts=None):
-        pre_frozen = set()
-        for giver, gifts in result.items():
-            received = defaultdict(list)
-            for slot, taker in gifts:
-                received[slot].append(taker)
-            self.assertEqual(len(slots), len(received.keys()), "expect exactly one gift per slot")
-            self.assertSetEqual(set(slots), set(received.keys()), "expect giver to give a gift in every slot")
-            given_to = []
-            for per_slot in received.values():
-                given_to += per_slot
-            self.assertNotIn(giver, given_to, "expect giver does not self-gift")
-            self.assertEqual(len(given_to), len(set(given_to)), "expect no duplicate recipients")
-            pre_frozen.add((giver, frozenset(gifts)))
-        frozen = roundrobin.Assigner.freeze(result)
-        if counts is not None:
-            counts[frozen].append(seed)
+    def test_6_givers_3_slots(self):
+        slots = [1, 2, 3]
+        givers = list("abcdef")
+        a = self._create_assigner()
+        assignment = a.assign(givers, slots)
+        self.check_result(assignment, slots)
 
     def test_many_seeds(self, num_seeds=None):
         n = 0
@@ -83,11 +74,4 @@ class ItertoolsAssignerTest(roundrobin.tests.AssignerCaseBase):
                 print(len(seeds), " seeds produce duplicates;", seeds)
                 dupes += 1
         print(dupes, "duplicates")
-    # def test_get_takers(self):
-    #     g = 'b'
-    #     slot = '*'
-    #     already_given_to = {'a'}
-    #     takers_slots = {'a': ['*'], 'b': ['*'], 'c': ['$']}
-    #     a = self._create_assigner()
-    #     recipient_pool = a.get_takers(takers_slots, g, slot, already_given_to)
-    #     self.assertListEqual()
+        self.assertEqual(0, dupes, "expect zero seeds produce duplicates")
