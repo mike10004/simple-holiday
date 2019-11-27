@@ -182,10 +182,10 @@ def main():
     takers = tokenize(args.takers or givers)
     slots = tokenize(args.slots)
     _log.debug("givers %s; takers %s; slots %s", givers, takers, slots)
-    shuffler = Shuffler(args.seed)
     if args.algorithm == 'nuevo':
-        assigner = itertools_assigner.ItertoolsAssigner(shuffler)
+        assigner = itertools_assigner.ItertoolsAssigner(args.seed)
     elif args.algorithm == 'classic':
+        shuffler = Shuffler(args.seed)
         assigner = classic_assigner.ClassicAssigner(shuffler)
     else:
         raise ValueError("algorithm not recognized: " + args.algorithm)
