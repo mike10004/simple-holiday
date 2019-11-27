@@ -11,7 +11,8 @@ _log = logging.getLogger(__name__)
 class ClassicAssigner(Assigner):
 
     def __init__(self, shuffler: Shuffler):
-        super().__init__(shuffler)
+        super().__init__()
+        self.shuffler = shuffler
 
     def assign(self, givers, slots, takers=None) -> Dict[Any, Set[Tuple[Any, Any]]]:
         takers = takers or set(givers)

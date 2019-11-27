@@ -74,11 +74,11 @@ class AssignerCaseBase(unittest.TestCase):
             ('c', '$', 'a'),
         }
         if expected != actual:
-            print("expected: \n\n{}\n\n".format(json.dumps(expected, cls=BetterEncoder)))
-            print("  actual: \n\n{}\n\n".format(json.dumps(actual, cls=BetterEncoder)))
+            print("expected: \n\n{}\n\n".format(json.dumps(sorted(expected), cls=BetterEncoder)))
+            print("  actual: \n\n{}\n\n".format(json.dumps(sorted(actual.to_set()), cls=BetterEncoder)))
         self.assertSetEqual(expected, actual, "three givers, two slots")
 
-    def check_result(self, result: Assignment, slots, seed=None, counts=None):
+    def check_result(self, result: Assignment, slots):
         slots_by_giver = defaultdict(list)
         slots_by_taker = defaultdict(list)
         takers_by_giver = defaultdict(list)
@@ -93,6 +93,4 @@ class AssignerCaseBase(unittest.TestCase):
         for giver, taker_list in takers_by_giver.items():
             self.assertNotIn(giver, taker_list, "expect giver does not self-gift")
             self.assertEqual(len(taker_list), len(set(taker_list)), "expect no duplicates in taker list: " + str(taker_list))
-        if counts is not None:
-            counts[result].append(seed)
 
