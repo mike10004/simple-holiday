@@ -27,6 +27,9 @@ class Assignment(frozenset):
     def to_set(self):
         return set(self)
 
+    def __str__(self):
+        return str(sorted(self))
+
 class Shuffler(object):
 
     def __init__(self, seed: int=None):

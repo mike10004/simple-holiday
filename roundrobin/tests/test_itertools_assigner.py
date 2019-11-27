@@ -17,8 +17,9 @@ _log = logging.getLogger(__name__)
 
 class ItertoolsAssignerTest(roundrobin.tests.AssignerCaseBase):
 
-    def _create_assigner(self):
-        seed = self.seed
+    def _create_assigner(self, seed=None):
+        if seed is None:
+            seed = self.seed
         assert seed is not None
         return ItertoolsAssigner(seed)
 
@@ -40,7 +41,7 @@ class ItertoolsAssignerTest(roundrobin.tests.AssignerCaseBase):
     def test_6_givers_3_slots(self):
         slots = [1, 2, 3]
         givers = list("abcdef")
-        a = self._create_assigner()
+        a = self._create_assigner(0)
         assignment = a.assign(givers, slots)
         self.check_result(assignment, slots)
 
@@ -60,11 +61,10 @@ class ItertoolsAssignerTest(roundrobin.tests.AssignerCaseBase):
             counts[result].append(seed)
             n += 1
         dupes = 0
-        print(n, "seeds checked")
+        print(n, "seeds checked ({} givers, {} slots)".format(len(givers), len(slots)))
         for ass, seeds in counts.items():
             self.check_result(ass, slots)
             if len(seeds) > 1:
                 print(len(seeds), " seeds produce duplicates;", seeds)
                 dupes += 1
-        print(dupes, "duplicates")
         self.assertEqual(0, dupes, "expect zero seeds produce duplicates")

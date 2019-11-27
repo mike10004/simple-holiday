@@ -13,8 +13,13 @@ _log = logging.getLogger(__name__)
 
 class Circle(object):
 
-    def __init__(self, items: List):
+    def __init__(self, items: List, start_after=None):
         self.iterator = itertools.cycle(items)
+        if start_after is not None:
+            assert start_after in items
+            for value in self.iterator:
+                if value == start_after:
+                    break
 
     def next(self, prohibited=None):
         value = self.iterator.__next__()
@@ -75,13 +80,13 @@ class ItertoolsAssigner(Assigner):
         takers = sorted(takers or set(givers))
         assignments = defaultdict(dict)
         takers, slots = self.permute_takers_and_slots(takers, slots)
-        takers_circle = Circle(takers)
         for g in givers:
             if self.allow_self_assignment:
                 prohibited = None
             else:
                 prohibited = g
                 assert len(takers) > 1, "must allow self-assignment if list of recipients has length 1"
+            takers_circle = Circle(takers, g)
             for slot in slots:
                 recipient = takers_circle.next(prohibited)
                 assignments[g][slot] = recipient

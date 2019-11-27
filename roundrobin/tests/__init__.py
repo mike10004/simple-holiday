@@ -78,7 +78,7 @@ class AssignerCaseBase(unittest.TestCase):
             print("  actual: \n\n{}\n\n".format(json.dumps(sorted(actual.to_set()), cls=BetterEncoder)))
         self.assertSetEqual(expected, actual, "three givers, two slots")
 
-    def check_result(self, result: Assignment, slots):
+    def check_result(self, result: Assignment, slots, allow_self_assignment=False):
         slots_by_giver = defaultdict(list)
         slots_by_taker = defaultdict(list)
         takers_by_giver = defaultdict(list)
@@ -86,11 +86,16 @@ class AssignerCaseBase(unittest.TestCase):
             slots_by_giver[giver].append(slot)
             slots_by_taker[taker].append(slot)
             takers_by_giver[giver].append(taker)
+        problems = []
         for giver, slot_list in slots_by_giver.items():
-            self.assertListEqual(sorted(slots), sorted(slot_list), "expect giver to give exactly one gift per slot")
+            if sorted(slots) != sorted(slot_list):
+                problems.append("expect giver {} to give exactly one gift per slot".format(giver))
         for taker, slot_list in slots_by_taker.items():
-            self.assertListEqual(sorted(slots), sorted(slot_list), "expect taker to receive exactly one gift per slot")
+            if sorted(slots) != sorted(slot_list):
+                problems.append("expect taker {} to receive exactly one gift per slot".format(taker))
         for giver, taker_list in takers_by_giver.items():
-            self.assertNotIn(giver, taker_list, "expect giver does not self-gift")
-            self.assertEqual(len(taker_list), len(set(taker_list)), "expect no duplicates in taker list: " + str(taker_list))
-
+            if not allow_self_assignment and giver in taker_list:
+                problems.append("expect giver {} does not self-gift".format(giver))
+            if len(taker_list) != len(set(taker_list)):
+                problems.append("expect no duplicates in taker list {}".format(taker_list))
+        self.assertEqual(0, len(problems), "{} has problems: {}".format(result, problems))
