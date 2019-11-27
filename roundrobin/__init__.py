@@ -60,3 +60,12 @@ class Assigner(object):
     def assign(self, givers, slots, takers=None) -> Assignment:
         raise NotImplementedError("subclasses must implement")
 
+
+def to_multi_seed(seed, sizes):
+    ranges = [range(n) for n in sizes]
+    index_lists = list(itertools.product(*ranges))
+    if seed is None:
+        index_lists_index = random.randint(0, len(index_lists))
+    else:
+        index_lists_index = seed % len(index_lists)
+    return index_lists[index_lists_index]

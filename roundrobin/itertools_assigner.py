@@ -3,17 +3,17 @@
 
 import logging
 from collections import defaultdict
-from typing import Dict, Tuple, Any, Set, List, Optional
-import random
+from typing import Optional
+import roundrobin
 import itertools
-from roundrobin import Assigner, Assignment, Shuffler
+from roundrobin import Assigner, Assignment
 
 _log = logging.getLogger(__name__)
 
 
 class Circle(object):
 
-    def __init__(self, items: List, start_after=None):
+    def __init__(self, items: list, start_after=None):
         self.iterator = itertools.cycle(items)
         if start_after is not None:
             assert start_after in items
@@ -33,26 +33,16 @@ class Permuter(object):
 
     @staticmethod
     def get_order_changing_permutations(seq):
+        """
+        Gets all permutations of a circular sequence wherein the order is changed.
+        :param seq: the sequence
+        :return: a list of permutations
+        """
         seq = list(seq)
         assert seq
         min_val = min(seq)
         permutations = map(lambda p: tuple(p), itertools.permutations(seq))
         return list(filter(lambda p: p[0] == min_val, permutations))
-
-    # def permute_two(self, seq1, seq2):
-    #     all_perms_1 = Permuter.get_order_changing_permutations(seq1)
-    #     all_perms_2 = Permuter.get_order_changing_permutations(seq2)
-    #     index_pairs_list = list(itertools.product(list(range(len(all_perms_1))), list(range(len(all_perms_2)))))
-    #     index_pairs_list_len = len(index_pairs_list)
-    #     if self.seed is None:
-    #         random.Random().randint(0, index_pairs_list_len - 1)
-    #     else:
-    #         index = self.seed % index_pairs_list_len
-    #     index1, index2 = index_pairs_list[index]
-    #     seq1_perm = all_perms_1[index1]
-    #     seq2_perm = all_perms_2[index2]
-    #     return seq1_perm, seq2_perm
-
 
 
 class ItertoolsAssigner(Assigner):
@@ -64,11 +54,7 @@ class ItertoolsAssigner(Assigner):
     def permute_takers_and_slots(self, takers, slots):
         takers_permutations = Permuter.get_order_changing_permutations(takers)
         slots_permutations = list(itertools.permutations(slots))
-        index_pairs = list(itertools.product(list(range(len(takers_permutations))), list(range(len(slots_permutations)))))
-        if self.seed is None:
-            takers_perm_index, slots_perm_index = index_pairs[random.randint(0, len(index_pairs) - 1)]
-        else:
-            takers_perm_index, slots_perm_index = index_pairs[self.seed % len(index_pairs)]
+        takers_perm_index, slots_perm_index = roundrobin.to_multi_seed(self.seed, [len(takers_permutations), len(slots_permutations)])
         return takers_permutations[takers_perm_index], slots_permutations[slots_perm_index]
 
     def assign(self, givers, slots, takers=None) -> Assignment:

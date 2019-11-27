@@ -3,9 +3,7 @@
 
 from __future__ import print_function
 import logging
-import unittest
-import json
-from roundrobin.classic_assigner import ClassicAssigner, Shuffler
+from roundrobin.classic_assigner import ClassicAssigner
 from roundrobin.tests import NonrandomShuffler
 import roundrobin.tests
 
