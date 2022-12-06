@@ -108,16 +108,13 @@ class TestMarkdownTableRenderer(unittest.TestCase):
         MarkdownTableRenderer(1).render(rows, ofile)
         output = ofile.getvalue()
         expected = """\
-|---|---|---|---|
 |   | a | b | c |
 |---|---|---|---|
 | a |   | * | $ |
-|---|---|---|---|
 | b | $ |   | * |
-|---|---|---|---|
 | c | * | $ |   |
-|---|---|---|---|
 """
+        print(f"expected\n{expected}\n\nactual\n{output}")
         self.assertEqual(expected, output)
 
 class TestCsvTableRenderer(unittest.TestCase):

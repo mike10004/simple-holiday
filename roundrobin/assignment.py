@@ -90,7 +90,7 @@ class Tabulator(object):
         others = oracle.get_others(self.other_idx)
         if set(others) == set(givers):
             others = list(givers)
-        cells_per_row = 1 + len(others)
+        # cells_per_row = 1 + len(others)
         rows = []
         header_row = tuple([""] + others)
         rows.append(header_row)
@@ -102,7 +102,7 @@ class Tabulator(object):
 
 
 def _repeat(ch, n):
-    return ''.join([ch for i in range(n)])
+    return ''.join([ch for _ in range(n)])
 
 
 class MarkdownTableRenderer(object):
@@ -115,7 +115,7 @@ class MarkdownTableRenderer(object):
         width = self.spaceage + 2
         pipe = "|"
         num_cells = len(rows[0])
-        divider = pipe + pipe.join([_repeat('-', width) for i in range(num_cells)]) + pipe
+        divider = pipe + pipe.join(_repeat('-', width) for _ in range(num_cells)) + pipe
         #print(divider, file=ofile)
         past_header = False
         for row in rows:
