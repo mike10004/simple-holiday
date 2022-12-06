@@ -1,18 +1,32 @@
 Simple Holiday Giving Assignment Generator
 ==========================================
 
-To generate your own, fork this repo and configure your Travis build 
-environment with the following variables:
+This is a program that generates assignments of gifts for a group of people 
+where the total number of gifts given/received by any person is bounded below
+the total number of people in the group.
 
-* `HOLIDAY_GIVERS` - `"Larry Moe Curly"` is 3 people
-* `HOLIDAY_SLOTS` - `"borrowed blue"` is 2 gift types
-* `HOLIDAY_SEED` - an integer that seeds the randomizer
+The idea is to reduce burden and inefficiency of holiday gift giving by 
+simplifying and randomizing the giving. 
 
-Markdown-format tables can be rendered at 
-https://www.tablesgenerator.com/markdown_tables
+Say you have 5 people, you might decide that each person will give and receive 
+2 gifts, and the assignment generator will generate random assignments of 
+giver to recipient. The generator tries to avoid situations like one person 
+being assigned multiple gifts to one other person, or having people exchange 
+gifts (A->B and B->A), where possible.
 
-When executing from the command line, you may have to do
+To generate your own, fork this repo and execute
 
-    $ export PYTHONPATH=$(pwd)
+    $ PYTHONPATH=$PWD roundrobin/assignment.py --format tsv_slots --slots GivesTo1 GivesTo2 -- Happy Grumpy Sleepy Sneezy Doc
 
-first.
+The output might be like this:
+
+            GivesTo1  GivesTo2
+    Happy   Grumpy    Doc
+    Grumpy  Doc       Sleepy
+    Sleepy  Sneezy    Happy
+    Sneezy  Happy     Grumpy
+    Doc     Sleep     Sneezy
+
+Other formats are possible with the `--format` option. Execute `--help` for details.
+
+Markdown-format tables can be rendered here: https://www.tablesgenerator.com/markdown_tables

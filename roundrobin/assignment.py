@@ -6,6 +6,8 @@ import logging
 import sys
 import json
 import csv
+from typing import Sequence
+
 from roundrobin import Shuffler, Assignment
 from roundrobin import classic_assigner
 from roundrobin import itertools_assigner
@@ -34,7 +36,7 @@ _FORMATS = (
 )
 
 def tokenize(specs):
-    assert isinstance(specs, tuple) or isinstance(specs, list), "expect list or tuple as argument"
+    assert isinstance(specs, tuple) or isinstance(specs, list), f"expect list or tuple as argument (not {type(specs)}: {specs})"
     assert len(specs) > 0
     orig = specs
     if len(specs) == 1:
@@ -114,11 +116,14 @@ class MarkdownTableRenderer(object):
         pipe = "|"
         num_cells = len(rows[0])
         divider = pipe + pipe.join([_repeat('-', width) for i in range(num_cells)]) + pipe
-        print(divider, file=ofile)
+        #print(divider, file=ofile)
+        past_header = False
         for row in rows:
             row_formatted = pipe + pipe.join([cell_fmt % row[i] for i in range(len(row))]) + pipe
             print(row_formatted, file=ofile)
-            print(divider, file=ofile)
+            if not past_header:
+                print(divider, file=ofile)
+            past_header = True
 
 
 class CsvTableRenderer(object):
@@ -166,17 +171,17 @@ def render_assignments(givers, assignment: Assignment, fmt, ofile=sys.stdout):
         renderer.render(rows, ofile)
 
 
-def main():
+def main(argv1: Sequence[str] = None):
     from argparse import ArgumentParser
     p = ArgumentParser()
     p.add_argument("givers", nargs='+', help="list of givers")
     p.add_argument("--takers", help="list of takers; givers are used by default")
-    p.add_argument("--slots", nargs='+', default='', help="set gift types")
+    p.add_argument("--slots", nargs='+', default=('any',), help="set gift types")
     p.add_argument("--seed", type=int, help="set random number generator seed")
     p.add_argument("--format", metavar='FORMAT', choices=_FORMATS, default=_FORMATS[0], help="output format (choices: {})".format(set(_FORMATS)))
     p.add_argument("--log-level", metavar='LEVEL', choices=('DEBUG', 'INFO', 'WARN', 'ERROR'), default='INFO', help="set log level")
     p.add_argument("--algorithm", metavar='ALGO', choices=('classic', 'nuevo'), default='classic', help="assignment algorithm to use; choices are 'nuevo' or 'classic'")
-    args = p.parse_args()
+    args = p.parse_args(argv1)
     logging.basicConfig(level=logging.__dict__[args.log_level])
     givers = tokenize(args.givers)
     takers = tokenize(args.takers or givers)
