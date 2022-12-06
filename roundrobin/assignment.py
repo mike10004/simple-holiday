@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from __future__ import print_function
+
+import hashlib
 import logging
 import sys
 import json
 import csv
-from typing import Sequence
+from typing import Sequence, Any
 
 from roundrobin import Shuffler, Assignment
 from roundrobin import classic_assigner
@@ -171,13 +173,26 @@ def render_assignments(givers, assignment: Assignment, fmt, ofile=sys.stdout):
         renderer.render(rows, ofile)
 
 
+def to_seed_int(source: Any) -> int:
+    source = str(source)
+    try:
+        return int(source)
+    except (TypeError, ValueError):
+        pass
+    h = hashlib.md5()
+    h.update(source.encode('utf-8'))
+    barray = h.digest()
+    seed = int.from_bytes(barray, "big")
+    return seed
+
+
 def main(argv1: Sequence[str] = None):
     from argparse import ArgumentParser
     p = ArgumentParser()
     p.add_argument("givers", nargs='+', help="list of givers")
     p.add_argument("--takers", help="list of takers; givers are used by default")
     p.add_argument("--slots", nargs='+', default=('any',), help="set gift types")
-    p.add_argument("--seed", type=int, help="set random number generator seed")
+    p.add_argument("--seed", help="set random number generator seed")
     p.add_argument("--format", metavar='FORMAT', choices=_FORMATS, default=_FORMATS[0], help="output format (choices: {})".format(set(_FORMATS)))
     p.add_argument("--log-level", metavar='LEVEL', choices=('DEBUG', 'INFO', 'WARN', 'ERROR'), default='INFO', help="set log level")
     p.add_argument("--algorithm", metavar='ALGO', choices=('classic', 'nuevo'), default='classic', help="assignment algorithm to use; choices are 'nuevo' or 'classic'")
@@ -187,10 +202,11 @@ def main(argv1: Sequence[str] = None):
     takers = tokenize(args.takers or givers)
     slots = tokenize(args.slots)
     _log.debug("givers %s; takers %s; slots %s", givers, takers, slots)
+    seed = to_seed_int(args.seed)
     if args.algorithm == 'nuevo':
-        assigner = itertools_assigner.ItertoolsAssigner(args.seed)
+        assigner = itertools_assigner.ItertoolsAssigner(seed)
     elif args.algorithm == 'classic':
-        shuffler = Shuffler(args.seed)
+        shuffler = Shuffler(seed)
         assigner = classic_assigner.ClassicAssigner(shuffler)
     else:
         raise ValueError("algorithm not recognized: " + args.algorithm)
