@@ -139,6 +139,13 @@ class CsvTableRenderer(object):
             csv_writer.writerow(row)
 
 
+def _starts_with_vowel(s: str) -> bool:
+    for vowel in "aeiou":
+        if s.lower().startswith(vowel):
+            return True
+    return False
+
+
 _RENDERABLES = {
     FORMAT_MD_TABLE_TAKERS: (_TAKER, MarkdownTableRenderer, 8),
     FORMAT_MD_TABLE_SLOTS: (_SLOT, MarkdownTableRenderer, 8),
@@ -158,7 +165,9 @@ def render_assignments(givers, assignment: Assignment, fmt, ofile=sys.stdout):
     elif fmt == FORMAT_ENGLISH:
         for giver in givers:
             for a in assignments_by_giver[giver]:
-                print("{} gives a \"{}\" gift to {}".format(giver, a[_SLOT], a[_TAKER]), file=ofile)
+                slot, taker = a[_SLOT], a[_TAKER]
+                article = "an" if _starts_with_vowel(slot) else "a"
+                print(f"{giver} gives {article} \"{slot}\" gift to {taker}", file=ofile)
     else:
         try:
             rendering_hints = _RENDERABLES[fmt]
@@ -194,10 +203,10 @@ def main(argv1: Sequence[str] = None):
     p.add_argument("--slots", nargs='+', default=('any',), help="set gift types")
     p.add_argument("--seed", help="set random number generator seed")
     p.add_argument("--format", metavar='FORMAT', choices=_FORMATS, default=_FORMATS[0], help="output format (choices: {})".format(set(_FORMATS)))
-    p.add_argument("--log-level", metavar='LEVEL', choices=('DEBUG', 'INFO', 'WARN', 'ERROR'), default='INFO', help="set log level")
+    p.add_argument("--log-level", metavar='LEVEL', choices=('DEBUG', 'INFO', 'WARNING', 'ERROR'), default='INFO', help="set log level")
     p.add_argument("--algorithm", metavar='ALGO', choices=('classic', 'nuevo'), default='classic', help="assignment algorithm to use; choices are 'nuevo' or 'classic'")
     args = p.parse_args(argv1)
-    logging.basicConfig(level=logging.__dict__[args.log_level])
+    logging.basicConfig(level=args.log_level)
     givers = tokenize(args.givers)
     takers = tokenize(args.takers or givers)
     slots = tokenize(args.slots)
