@@ -16,7 +16,10 @@ gifts (A->B and B->A), where possible.
 
 To generate your own, fork this repo and execute
 
-    $ PYTHONPATH=$PWD roundrobin/assignment.py --format tsv_slots --slots GivesTo1 GivesTo2 -- Happy Grumpy Sleepy Sneezy Doc
+    $ python3 -m roundrobin.assignment \
+        --format tsv_slots \
+        --slots GivesTo1 GivesTo2 \
+        -- Happy Grumpy Sleepy Sneezy Doc
 
 The output might be like this:
 
